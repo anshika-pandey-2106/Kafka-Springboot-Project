@@ -18,7 +18,8 @@ public class KafkaProducer {
     public void sendMessage(String message)
     {
         LOGGER.info(String.format("Message sent to first topic : %s ", message));
-        kafkaTemplate.send("intermediateTopic", message);
+        for(int i=0; i<900; i++)
+        kafkaTemplate.send("intermediateTopic", "redefined");
 
 
     }
