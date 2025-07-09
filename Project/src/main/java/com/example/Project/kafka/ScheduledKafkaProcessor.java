@@ -1,5 +1,8 @@
 package com.example.Project.kafka;
 
+import com.example.Project.model.DailyLogs;
+import com.example.Project.mongoservice.DailyLogService;
+import com.example.Project.repository.DailyTransferRepo;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -13,45 +16,66 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class ScheduledKafkaProcessor {
 
+    //Kafka consumer that reads messages with String key and value
     @Autowired
     private KafkaConsumer<String, String> manualKafkaConsumer;
 
+
+    //Used to send the message to another topic
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    @Autowired
+    DailyLogService dailyLogService;
+    @Autowired
+    DailyTransferRepo dailyTransferRepo;
+
     private final Logger log = LoggerFactory.getLogger(ScheduledKafkaProcessor.class);
 
-    @Scheduled(cron = "0 26 16 * * *", zone = "Asia/Kolkata") // 3:02 PM IST
+    @Scheduled(cron = "50 43 14 * * *", zone = "Asia/Kolkata") // 3:02 PM IST
     public void processMessages() {
-        manualKafkaConsumer.subscribe(Collections.singletonList("intermediateTopic"));
-        Set<TopicPartition> partitions = manualKafkaConsumer.assignment();
-        log.info("Assigned partitions: {}", partitions);
 
+        //subscribe to topic
+        manualKafkaConsumer.subscribe(Collections.singletonList("intermediateTopic"));
+
+
+        //Set<TopicPartition> partitions = manualKafkaConsumer.assignment();
+        //log.info("Assigned partitions: {}", partitions);
+
+        //to store all the messages pulled
         List<ConsumerRecord<String, String>> allMessages = new ArrayList<>();
-        long endTime = System.currentTimeMillis() + (1 * 1 * 100); // 15 minutes
-        log.info(String.format("step1"));
-        // Step 1: Pull all uncommitted messages
+
+        //run consumer for 100ms
+        long endTime = System.currentTimeMillis() + (1 * 10 * 1000);
+
+
+        //Pull all uncommitted messages
         while (System.currentTimeMillis() < endTime) {
             ConsumerRecords<String, String> records = manualKafkaConsumer.poll(Duration.ofSeconds(5));
-            log.info(String.format("pulled"));
+
             if (records.isEmpty())
             {
                 log.info(String.format("empty"));
                 break;
             }
+            //Add pulled messages to ArrayList
             records.forEach(allMessages::add);
         }
+        log.info(String.format("Pulled messages"));
 
         int pulledCount = allMessages.size();
         int pushedCount = 0;
+
         Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>();
 
-        // Step 2: Push one by one until time runs out
+        //Push messages one by one before time runs out
         for (ConsumerRecord<String, String> record : allMessages) {
             if (System.currentTimeMillis() >= endTime) break;
 
@@ -66,14 +90,34 @@ public class ScheduledKafkaProcessor {
                 log.error("Failed to push message", e);
             }
         }
+        log.info(String.format("Pushed messages ")); //for debugging
 
-        // Step 3: Commit only pushed messages
+        //Commit only pushed messages
         try {
             manualKafkaConsumer.commitSync(offsetsToCommit);
         } catch (Exception e) {
             log.error("Offset commit failed", e);
         }
+        log.info(String.format("Committed offsets"));
+        int deferred= pulledCount-pushedCount;
 
-        log.info("Pulled: {}, Pushed: {}, Deferred: {}", pulledCount, pushedCount, pulledCount - pushedCount);
+        //Mongodb
+        //format the Date such that only date is stored (not time)
+        //mongodb stores date with time and timezone,
+        //so store only date as a string, easier to query
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate= LocalDate.now();
+        String dateString = localDate.format(formatter);
+
+        if(dailyTransferRepo.findByRecordDate(dateString).isPresent())
+        {   //update existing record
+            dailyLogService.updateExisiting(LocalDate.now(), pulledCount, pushedCount, deferred);
+            log.info(String.format("Updated existing record"));
+        } else{
+            //create new record
+            dailyLogService.createNew(LocalDate.now(), pulledCount, pushedCount, deferred);
+            log.info(String.format("Created new record"));
+        }
+
     }
 }

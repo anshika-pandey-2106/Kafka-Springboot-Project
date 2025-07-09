@@ -25,8 +25,12 @@ public class MessageController {
     @GetMapping("/publish")
     public ResponseEntity<String> publish(@RequestParam("message") String message) //RequestParam("message") gives the value given to it to String message
     {
+        for(int i=0;i<1000;i++)
+        {
+            kafkaProducer.sendMessage("wednesday");
+        }
 
-        kafkaProducer.sendMessage(message);
-        return ResponseEntity.ok("Message sent to topic 1");
+
+        return ResponseEntity.ok("Message sent 1000 msgs to topic 1");
     }
 }
