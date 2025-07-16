@@ -21,13 +21,13 @@ public class MessageController {
         this.kafkaProducer=kafkaProducer;
     }
 
-    //http:localhost:8080/kafka/publish?message=hello-world
-    @GetMapping("/publish")
+    //http:localhost:8080/kafka/home/publish?message=hello-world
+    @GetMapping("/home/publish")
     public ResponseEntity<String> publish(@RequestParam("message") String message) //RequestParam("message") gives the value given to it to String message
     {
-        for(int i=0;i<1000;i++)
+        for(int i=0;i<100;i++)
         {
-            kafkaProducer.sendMessage("wednesday");
+            kafkaProducer.sendMessage("hello" + i);
         }
 
 

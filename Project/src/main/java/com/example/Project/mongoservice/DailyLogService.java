@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 
 //handles logic for creating and updating records in MongoDB
@@ -45,6 +46,12 @@ public class DailyLogService {
        dataLog.setPulledCount(pulledCount);
 
        dailyTransferRepo.save(dataLog);
+
+    }
+
+    //for getting all statistics stored in the database
+    public List<DailyLogs> getAllStats(){
+      return dailyTransferRepo.findAll();
 
     }
 }

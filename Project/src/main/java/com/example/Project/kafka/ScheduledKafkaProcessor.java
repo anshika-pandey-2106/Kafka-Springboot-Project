@@ -39,7 +39,7 @@ public class ScheduledKafkaProcessor {
 
     private final Logger log = LoggerFactory.getLogger(ScheduledKafkaProcessor.class);
 
-    @Scheduled(cron = "50 43 14 * * *", zone = "Asia/Kolkata") // 3:02 PM IST
+    @Scheduled(cron = "10 17 15 * * *", zone = "Asia/Kolkata") // 3:02 PM IST
     public void processMessages() {
 
         //subscribe to topic
