@@ -27,7 +27,7 @@ public class DailyLogService {
     public void createNew(LocalDate date, int pulledCount, int pushedCount, int deferred)
     {
         DailyLogs dataLog= new DailyLogs();
-        dataLog.setDate(dateString);
+        dataLog.setRecordDate(dateString);
         dataLog.setDeffered(deferred);
         dataLog.setTimestamp( LocalDateTime.now());
         dataLog.setPulledCount(pulledCount);

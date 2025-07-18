@@ -52,7 +52,7 @@ public class ScheduledKafkaProcessor {
         //to store all the messages pulled
         List<ConsumerRecord<String, String>> allMessages = new ArrayList<>();
 
-        //run consumer for 100ms
+        //run consumer for time:
         long endTime = System.currentTimeMillis() + (1 * 10 * 1000);
 
 
@@ -94,7 +94,7 @@ public class ScheduledKafkaProcessor {
 
         //Commit only pushed messages
         try {
-            manualKafkaConsumer.commitSync(offsetsToCommit);
+            manualKafkaConsumer.commitSync(offsetsToCommit); //commitSync for manual acknowledgement
         } catch (Exception e) {
             log.error("Offset commit failed", e);
         }

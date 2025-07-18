@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface DailyTransferRepo extends MongoRepository<DailyLogs, String> {
 
     Optional<DailyLogs> findByRecordDate(String date);
-    boolean existsByDate(LocalDate date);
+
 
 }

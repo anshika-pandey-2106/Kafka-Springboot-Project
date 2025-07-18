@@ -58,11 +58,11 @@ public class DailyLogs {
         this.deffered = deffered;
     }
 
-    public String getDate() {
+    public String getRecordDate() {
         return recordDate;
     }
 
-    public void setDate(String date) {
+    public void setRecordDate(String date) {
         this.recordDate = date;
     }
 
